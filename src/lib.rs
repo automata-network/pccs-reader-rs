@@ -20,7 +20,7 @@ pub enum MissingCollateral {
 }
 
 pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCollateral {
-    // Step 1: read the version and tee type
+    // Step 0: read the version and tee type
     let quote_version = u16::from_le_bytes([raw_quote[0], raw_quote[1]]);
     let tee_type = u32::from_le_bytes([raw_quote[4], raw_quote[5], raw_quote[6], raw_quote[7]]);
 
@@ -32,7 +32,33 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         panic!("Unsupported tee type");
     }
 
-    // Step 2: Check QE Identity first
+    // Step 1: Check ROOT CRLs
+    match get_certificate_by_id(CA::ROOT).await {
+        Ok((root, crl)) => {
+            if root.len() == 0 {
+                return MissingCollateral::PCS(CA::ROOT, true, true);
+            } else if crl.len() == 0 {
+                return MissingCollateral::PCS(CA::ROOT, false, true);
+            }
+        },
+        _ => {
+            return MissingCollateral::PCS(CA::ROOT, true, true); 
+        }
+    }
+
+    // Step 2: Check TCB Signing CA is present
+    match get_certificate_by_id(CA::SIGNING).await {
+        Ok((root, _)) => {
+            if root.len() == 0 {
+                return MissingCollateral::PCS(CA::SIGNING, true, false);
+            }
+        },
+        _ => {
+            return MissingCollateral::PCS(CA::SIGNING, true, false); 
+        }
+    }
+
+    // Step 3: Check QE Identity
     let qe_id_type: EnclaveIdType;
     if tee_type == TDX_TEE_TYPE {
         qe_id_type = EnclaveIdType::TDQE
@@ -48,10 +74,10 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         }
     }
 
-    // Step 3: get the fmspc value and the pck ca
+    // Step 4: get the fmspc value and the pck ca
     let (fmspc, pck_type) = get_pck_fmspc_and_issuer(raw_quote, quote_version, tee_type);
 
-    // Step 4: Check TCBInfo
+    // Step 5: Check TCBInfo
     let tcb_type: u8;
     if tee_type == TDX_TEE_TYPE {
         tcb_type = 1;
@@ -73,31 +99,17 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         }
     }
 
-    // Step 5: Check PCK CA CRLs
+    // Step 6: Check PCK CA CRLs
     match get_certificate_by_id(pck_type).await {
         Ok((cert, crl)) => {
             if cert.len() == 0 {
-                return MissingCollateral::PCS(pck_type, false, false);
+                return MissingCollateral::PCS(pck_type, true, true);
             } else if crl.len() == 0 {
-                return MissingCollateral::PCS(pck_type, true, false);
+                return MissingCollateral::PCS(pck_type, false, true);
             }
         },
         _ => {
-            return MissingCollateral::PCS(pck_type, false, false);
-        }
-    }
-
-    // Step 6: Check ROOT CRLs
-    match get_certificate_by_id(CA::ROOT).await {
-        Ok((root, crl)) => {
-            if root.len() == 0 {
-                return MissingCollateral::PCS(CA::ROOT, false, false);
-            } else if crl.len() == 0 {
-                return MissingCollateral::PCS(CA::ROOT, true, false);
-            }
-        },
-        _ => {
-            return MissingCollateral::PCS(CA::ROOT, false, false); 
+            return MissingCollateral::PCS(pck_type, true, true);
         }
     }
 
