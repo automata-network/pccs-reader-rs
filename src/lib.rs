@@ -4,9 +4,11 @@ pub mod parser;
 
 use constants::{SGX_TEE_TYPE, TDX_TEE_TYPE};
 use parser::get_pck_fmspc_and_issuer;
-use pccs::pcs::{IPCSDao::CA, get_certificate_by_id};
+use pccs::pcs::get_certificate_by_id;
 use pccs::enclave_id::{EnclaveIdType, get_enclave_identity};
 use pccs::fmspc_tcb::get_tcb_info;
+
+pub use pccs::pcs::IPCSDao::CA;
 
 #[derive(Debug)]
 pub enum MissingCollateral {
@@ -46,19 +48,7 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         }
     }
 
-    // Step 2: Check TCB Signing CA is present
-    match get_certificate_by_id(CA::SIGNING).await {
-        Ok((root, _)) => {
-            if root.len() == 0 {
-                return MissingCollateral::PCS(CA::SIGNING, true, false);
-            }
-        },
-        _ => {
-            return MissingCollateral::PCS(CA::SIGNING, true, false); 
-        }
-    }
-
-    // Step 3: Check QE Identity
+    // Step 2: Check QE Identity
     let qe_id_type: EnclaveIdType;
     if tee_type == TDX_TEE_TYPE {
         qe_id_type = EnclaveIdType::TDQE
@@ -74,10 +64,10 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         }
     }
 
-    // Step 4: get the fmspc value and the pck ca
+    // Step 3: get the fmspc value and the pck ca
     let (fmspc, pck_type) = get_pck_fmspc_and_issuer(raw_quote, quote_version, tee_type);
 
-    // Step 5: Check TCBInfo
+    // Step 4: Check TCBInfo
     let tcb_type: u8;
     if tee_type == TDX_TEE_TYPE {
         tcb_type = 1;
@@ -96,6 +86,18 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         },
         _ => {
             return MissingCollateral::FMSPCTCB(tcb_type, fmspc, tcb_version);
+        }
+    }
+
+    // Step 5: Check TCB Signing CA is present
+    match get_certificate_by_id(CA::SIGNING).await {
+        Ok((root, _)) => {
+            if root.len() == 0 {
+                return MissingCollateral::PCS(CA::SIGNING, true, false);
+            }
+        },
+        _ => {
+            return MissingCollateral::PCS(CA::SIGNING, true, false); 
         }
     }
 
