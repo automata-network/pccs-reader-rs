@@ -50,6 +50,9 @@ Now the reader only supports the cert_type = 5 in the quote attestation data, fo
 
 ## See also
 
+* [Automata On Chain PCCS](https://github.com/automata-network/automata-on-chain-pccs)
+* [Automata DCAP Attestation](https://github.com/automata-network/automata-dcap-attestation)
+* [Automata DCAP QPL](https://github.com/automata-network/automata-dcap-qpl)
 * [SGX DCAP Caching Service Design Guide](https://download.01.org/intel-sgx/sgx-dcap/1.20/linux/docs/SGX_DCAP_Caching_Service_Design_Guide.pdf)
 * [Intel SGX ECDSA Quote Lib Reference DCAP API](https://download.01.org/intel-sgx/sgx-dcap/1.20/linux/docs/Intel_SGX_ECDSA_QuoteLibReference_DCAP_API.pdf)
 * [DCAP ECDSA Orientation](https://download.01.org/intel-sgx/sgx-dcap/1.20/linux/docs/DCAP_ECDSA_Orientation.pdf)
