@@ -1,6 +1,5 @@
 // Chain Defaults
 pub const DEFAULT_RPC_URL: &str = "https://automata-testnet.alt.technology";
-pub const DEFAULT_DCAP_CONTRACT: &str = "5143B1d2Aff969b1edcfE1153D8Af17A731fB312";
 
 // TEE Type
 pub const SGX_TEE_TYPE: u32 = 0x00000000;
