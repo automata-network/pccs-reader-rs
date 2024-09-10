@@ -1,5 +1,5 @@
 // Chain Defaults
-pub const DEFAULT_RPC_URL: &str = "https://automata-testnet.alt.technology";
+pub const DEFAULT_RPC_URL: &str = "https://rpc-testnet.ata.network";
 
 // TEE Type
 pub const SGX_TEE_TYPE: u32 = 0x00000000;
