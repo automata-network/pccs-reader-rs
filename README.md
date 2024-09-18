@@ -7,7 +7,7 @@
 </div>
 
 # Automata On-chain PCCS Reader
-[![Automata On Chain PCCS](https://img.shields.io/badge/Power%20By-Automata-orange.svg)](https://github.com/automata-network)
+[![Automata On Chain PCCS Reader](https://img.shields.io/badge/Power%20By-Automata-orange.svg)](https://github.com/automata-network)
 
 ## About
 
