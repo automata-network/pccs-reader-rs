@@ -39,7 +39,7 @@ Now the reader only supports the cert_type = 5 in the quote attestation data, fo
 | PCK_HELPER | 0x5213c0e3Ab478dbc83E8afFF8909717332E4f8E1 |
 | CRL_HELPER | 0x12C1E13Aa2a238EAb15c2e2b6AC670266bc3C814 |
 
-### [Automata Mainnet(Preview)](https://docs.ata.network/protocol/mainnet-preview)
+### [Automata Mainnet](https://docs.ata.network/protocol/mainnet)
 
 | Contract | Address |
 | --- | --- |
