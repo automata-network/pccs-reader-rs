@@ -59,6 +59,7 @@ Now the reader only supports the cert_type = 5 in the quote attestation data, fo
 | X509_CRL_HELPER | [0x2567245dE6E349C8B7AA82fD6FF854b844A0aEF9](https://explorer.ata.network/address/0x2567245dE6E349C8B7AA82fD6FF854b844A0aEF9) |
 
 #### Ethereum Holesky Testnet
+
 | Contract | Address |
 | --- | --- |
 | DCAP_ATTESTATION | [0x133303659F51d75ED216FD98a0B70CbCD75339b2](https://holesky.etherscan.io/address/0x133303659F51d75ED216FD98a0B70CbCD75339b2) |
@@ -69,6 +70,19 @@ Now the reader only supports the cert_type = 5 in the quote attestation data, fo
 | FMSPC_TCB_DAO | [0xaB5074445E5ae3C650553d5a7560B3A7121635B9](https://holesky.etherscan.io/address/0xaB5074445E5ae3C650553d5a7560B3A7121635B9) |
 | PCK_DAO | [0x5B2d7781E3c44966769484daBCdc435EFD281c34](https://holesky.etherscan.io/address/0x5B2d7781E3c44966769484daBCdc435EFD281c34) |
 | PCS_DAO | [0x66FdB4E72d2F4a7e2081bf83F1FfACC9bbCb384b](https://holesky.etherscan.io/address/0x66FdB4E72d2F4a7e2081bf83F1FfACC9bbCb384b) |
+
+#### Ethereum Sepolia Testnet
+
+| Contract | Address |
+| --- | --- |
+| DCAP_ATTESTATION | [0x76A3657F2d6c5C66733e9b69ACaDadCd0B68788b](https://sepolia.etherscan.io/address/0x76A3657F2d6c5C66733e9b69ACaDadCd0B68788b) |
+| PCCS_ROUTER | [0xdc7dcF60b9580980128539Ed805D03BC60F84fd4](https://sepolia.etherscan.io/address/0xdc7dcF60b9580980128539Ed805D03BC60F84fd4) |
+| V3_VERIFIER | [0x85E156d702bb3e45690DAa812238C1A841E2c3C5](https://sepolia.etherscan.io/address/0x85E156d702bb3e45690DAa812238C1A841E2c3C5) |
+| V4_VERIFIER | [0xdc25e1c7ACAdBdE8C1E2c2b9511B7Dbd98B44700](https://sepolia.etherscan.io/address/0xdc25e1c7ACAdBdE8C1E2c2b9511B7Dbd98B44700) |
+| ENCLAVE_ID_DAO | [0x4bb680A5e6Ad6228E7d334903B0Ce10EF60c961C](https://sepolia.etherscan.io/address/0x4bb680A5e6Ad6228E7d334903B0Ce10EF60c961C) |
+| FMSPC_TCB_DAO | [0xF790b1C23e6508A6135Ce88450eC0A59Af0B9896](https://sepolia.etherscan.io/address/0xF790b1C23e6508A6135Ce88450eC0A59Af0B9896) |
+| PCK_DAO | [0x3eA9D905Cb79586C2184f329e6a651D97F2ebee3](https://sepolia.etherscan.io/address/0x3eA9D905Cb79586C2184f329e6a651D97F2ebee3) |
+| PCS_DAO | [0x348DA46aA11188f641f01dbe247b25FFA5FFB9c4](https://sepolia.etherscan.io/address/0x348DA46aA11188f641f01dbe247b25FFA5FFB9c4) |
 
 ## See also
 
