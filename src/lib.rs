@@ -12,6 +12,7 @@ pub use pccs::pcs::IPCSDao::CA;
 
 use serde_json::Value;
 use chrono::{Utc, DateTime};
+use x509_parser::prelude::*;
 
 #[derive(Debug)]
 pub enum MissingCollateral {
@@ -62,9 +63,20 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
     match get_certificate_by_id(CA::ROOT).await {
         Ok((root, crl)) => {
             if root.len() == 0 {
-                return MissingCollateral::PCS(CA::ROOT, true, true);
+                return MissingCollateral::PCS(CA::ROOT, true, false);
             } else if crl.len() == 0 {
                 return MissingCollateral::PCS(CA::ROOT, false, true);
+            }
+            let root_cert = parse_x509_der(&root);
+            if !root_cert.validity.is_valid() {
+                return MissingCollateral::PCS(CA::ROOT, true, false);
+            }
+            let root_ca_crl = parse_crl_der(&crl);
+            if let Some(next_update) = root_ca_crl.next_update() {
+                let now = x509_parser::time::ASN1Time::now();
+                if next_update < now {
+                    return MissingCollateral::PCS(CA::ROOT, false, true);
+                }
             }
         },
         _ => {
@@ -120,8 +132,12 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
 
     // Step 5: Check TCB Signing CA is present
     match get_certificate_by_id(CA::SIGNING).await {
-        Ok((root, _)) => {
-            if root.len() == 0 {
+        Ok((signing_ca, _)) => {
+            if signing_ca.len() == 0 {
+                return MissingCollateral::PCS(CA::SIGNING, true, false);
+            }
+            let signing_ca_cert = parse_x509_der(&signing_ca);
+            if !signing_ca_cert.validity.is_valid() {
                 return MissingCollateral::PCS(CA::SIGNING, true, false);
             }
         },
@@ -132,11 +148,22 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
 
     // Step 6: Check PCK CA CRLs
     match get_certificate_by_id(pck_type).await {
-        Ok((cert, crl)) => {
-            if cert.len() == 0 {
-                return MissingCollateral::PCS(pck_type, true, true);
-            } else if crl.len() == 0 {
+        Ok((pck_ca_cert, pck_ca_crl)) => {
+            if pck_ca_cert.len() == 0 {
+                return MissingCollateral::PCS(pck_type, true, false);
+            } else if pck_ca_crl.len() == 0 {
                 return MissingCollateral::PCS(pck_type, false, true);
+            }
+            let pck_ca_cert = parse_x509_der(&pck_ca_cert);
+            if !pck_ca_cert.validity.is_valid() {
+                return MissingCollateral::PCS(pck_type, true, false);
+            }
+            let pck_ca_crl = parse_crl_der(&pck_ca_crl);
+            if let Some(next_update) = pck_ca_crl.next_update() {
+                let now = x509_parser::time::ASN1Time::now();
+                if next_update < now {
+                    return MissingCollateral::PCS(pck_type, false, true);
+                }
             }
         },
         _ => {
@@ -145,6 +172,16 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
     }
 
     MissingCollateral::None
+}
+
+pub fn parse_x509_der<'a>(raw_bytes: &'a [u8]) -> X509Certificate<'a> {
+    let (_, cert) = X509Certificate::from_der(raw_bytes).unwrap();
+    cert
+}
+
+pub fn parse_crl_der<'a>(raw_bytes: &'a [u8]) -> CertificateRevocationList<'a> {
+    let (_, crl) = CertificateRevocationList::from_der(raw_bytes).unwrap();
+    crl
 }
 
 #[cfg(test)]
