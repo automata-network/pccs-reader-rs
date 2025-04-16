@@ -1,12 +1,14 @@
-pub mod pccs;
 pub mod constants;
 pub mod parser;
+pub mod pccs;
+pub mod printer;
 
 use constants::{SGX_TEE_TYPE, TDX_TEE_TYPE};
 use parser::get_pck_fmspc_and_issuer;
-use pccs::pcs::get_certificate_by_id;
-use pccs::enclave_id::{EnclaveIdType, get_enclave_identity};
+use pccs::enclave_id::{get_enclave_identity, EnclaveIdType};
 use pccs::fmspc_tcb::get_tcb_info;
+use pccs::pcs::get_certificate_by_id;
+use printer::{print_content, print_str_content};
 
 pub use pccs::pcs::IPCSDao::CA;
 
@@ -22,10 +24,10 @@ pub enum MissingCollateral {
     // TcbType, Fmspc, Version
     FMSPCTCB(u8, String, u32),
     // CA, certIsMissing, crlIsMissing
-    PCS(CA, bool, bool)
+    PCS(CA, bool, bool),
 }
 
-fn collateral_is_outdated(eid: Vec<u8>, collateral_name: &str) -> bool {
+fn collateral_is_outdated(eid: &[u8], collateral_name: &str) -> bool {
     let json_data: Value = serde_json::from_slice(&eid)
         .expect("unable to convert collateral fo json");
 
@@ -66,6 +68,9 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                 return MissingCollateral::PCS(CA::ROOT, true, false);
             } else if crl.len() == 0 {
                 return MissingCollateral::PCS(CA::ROOT, false, true);
+            } else {
+                print_content("rootca.der", &root).unwrap();
+                print_content("rootcrl.der", &crl).unwrap();
             }
             let root_cert = parse_x509_der(&root);
             if !root_cert.validity.is_valid() {
@@ -92,12 +97,22 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         qe_id_type = EnclaveIdType::QE
     }
     match get_enclave_identity(qe_id_type, quote_version as u32).await {
-        Ok(eid) => {
-            if collateral_is_outdated(eid, "enclaveIdentity") {
+        Ok(qe_id_content) => {
+            if collateral_is_outdated(qe_id_content.as_slice(), "enclaveIdentity") {
                 return MissingCollateral::QEIdentity(qe_id_type, quote_version as u32);
             }
-
-        },
+            let qe_id_string = match qe_id_type {
+                EnclaveIdType::QE => "qe",
+                EnclaveIdType::QVE => "qve",
+                EnclaveIdType::TDQE => "td",
+            };
+            let qe_id_filename = format!("identity-{}-v{}.json", qe_id_string, quote_version);
+            print_str_content(
+                &qe_id_filename,
+                std::str::from_utf8(&qe_id_content).unwrap(),
+            )
+            .unwrap();
+        }
         _ => {
             return MissingCollateral::QEIdentity(qe_id_type, quote_version as u32);
         }
@@ -120,11 +135,19 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
         tcb_version = 3
     }
     match get_tcb_info(tcb_type, fmspc.as_str(), tcb_version).await {
-        Ok(tcbi) => {
-            if collateral_is_outdated(tcbi, "tcbInfo") {
+        Ok(tcb_content) => {
+            if collateral_is_outdated(tcb_content.as_slice(), "tcbInfo") {
                 return MissingCollateral::FMSPCTCB(tcb_type, fmspc, tcb_version);
             }
-        },
+
+            let tcb_type_str: &str = match tcb_type {
+                0 => "sgx",
+                1 => "tdx",
+                _ => unreachable!(),
+            };
+            let tcb_filename = format!("tcbinfo-{}-v{}.json", tcb_type_str, tcb_version);
+            print_str_content(&tcb_filename, std::str::from_utf8(&tcb_content).unwrap()).unwrap();
+        }
         _ => {
             return MissingCollateral::FMSPCTCB(tcb_type, fmspc, tcb_version);
         }
@@ -139,8 +162,10 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
             let signing_ca_cert = parse_x509_der(&signing_ca);
             if !signing_ca_cert.validity.is_valid() {
                 return MissingCollateral::PCS(CA::SIGNING, true, false);
+            } else {
+                print_content("signingca.der", &signing_ca).unwrap();
             }
-        },
+        }
         _ => {
             return MissingCollateral::PCS(CA::SIGNING, true, false);
         }
@@ -153,6 +178,16 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                 return MissingCollateral::PCS(pck_type, true, false);
             } else if pck_ca_crl.len() == 0 {
                 return MissingCollateral::PCS(pck_type, false, true);
+            } else {
+                let pck_type_str = match pck_type {
+                    CA::PLATFORM => "platform",
+                    CA::PROCESSOR => "processor",
+                    _ => unreachable!(),
+                };
+                let pck_filename = format!("{}.der", pck_type_str);
+                let pck_crl_filename = format!("{}-crl.der", pck_type_str);
+                print_content(&pck_filename, &pck_ca_cert).unwrap();
+                print_content(&pck_crl_filename, &pck_ca_crl).unwrap();
             }
             let pck_ca_cert = parse_x509_der(&pck_ca_cert);
             if !pck_ca_cert.validity.is_valid() {
