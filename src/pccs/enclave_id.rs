@@ -67,7 +67,7 @@ pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<Vec
     let signature = signature_bytes.to_string();
 
     let ret_str = format!(
-        "{{\"enclaveIdentity\": {}, \"signature\": \"{}\"}}",
+        "{{\"enclaveIdentity\":{},\"signature\":\"{}\"}}",
         identity_str,
         remove_prefix_if_found(signature.as_str())
     );

@@ -53,7 +53,7 @@ pub async fn get_tcb_info(tcb_type: u8, fmspc: &str, version: u32) -> Result<Vec
     let signature = signature_bytes.to_string();
 
     let ret_str = format!(
-        "{{\"tcbInfo\": {}, \"signature\": \"{}\"}}",
+        "{{\"tcbInfo\":{},\"signature\":\"{}\"}}",
         tcb_info_str,
         remove_prefix_if_found(signature.as_str())
     );
