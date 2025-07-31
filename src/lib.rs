@@ -49,7 +49,7 @@ fn collateral_is_outdated(eid: &[u8], collateral_name: &str) -> bool {
 }
 
 
-pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCollateral {
+pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8], print: bool) -> MissingCollateral {
     // Step 0: read the version and tee type
     let quote_version = u16::from_le_bytes([raw_quote[0], raw_quote[1]]);
     let tee_type = u32::from_le_bytes([raw_quote[4], raw_quote[5], raw_quote[6], raw_quote[7]]);
@@ -69,7 +69,7 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                 return MissingCollateral::PCS(CA::ROOT, true, false);
             } else if crl.len() == 0 {
                 return MissingCollateral::PCS(CA::ROOT, false, true);
-            } else {
+            } else if print {
                 print_content("rootca.der", &root).unwrap();
                 print_content("rootcrl.der", &crl).unwrap();
             }
@@ -107,12 +107,15 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                 EnclaveIdType::QVE => "qve",
                 EnclaveIdType::TDQE => "td",
             };
-            let qe_id_filename = format!("identity-{}-v{}.json", qe_id_string, quote_version);
-            print_str_content(
-                &qe_id_filename,
-                std::str::from_utf8(&qe_id_content).unwrap(),
-            )
-            .unwrap();
+            if print {
+                let qe_id_filename = format!("identity-{}-v{}.json", qe_id_string, quote_version);
+
+                print_str_content(
+                    &qe_id_filename,
+                    std::str::from_utf8(&qe_id_content).unwrap(),
+                )
+                .unwrap();
+            }
         }
         _ => {
             return MissingCollateral::QEIdentity(qe_id_type, quote_version as u32);
@@ -146,8 +149,10 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                 1 => "tdx",
                 _ => unreachable!(),
             };
-            let tcb_filename = format!("tcbinfo-{}-v{}.json", tcb_type_str, tcb_version);
-            print_str_content(&tcb_filename, std::str::from_utf8(&tcb_content).unwrap()).unwrap();
+            if print {
+                let tcb_filename = format!("tcbinfo-{}-v{}.json", tcb_type_str, tcb_version);
+                print_str_content(&tcb_filename, std::str::from_utf8(&tcb_content).unwrap()).unwrap();
+            }
         }
         _ => {
             return MissingCollateral::FMSPCTCB(tcb_type, fmspc, tcb_version);
@@ -163,7 +168,7 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
             let signing_ca_cert = parse_x509_der(&signing_ca);
             if !signing_ca_cert.validity.is_valid() {
                 return MissingCollateral::PCS(CA::SIGNING, true, false);
-            } else {
+            } else if print {
                 print_content("signingca.der", &signing_ca).unwrap();
             }
         }
@@ -185,10 +190,12 @@ pub async fn find_missing_collaterals_from_quote(raw_quote: &[u8]) -> MissingCol
                     CA::PROCESSOR => "processor",
                     _ => unreachable!(),
                 };
-                let pck_filename = format!("{}.der", pck_type_str);
-                let pck_crl_filename = format!("{}-crl.der", pck_type_str);
-                print_content(&pck_filename, &pck_ca_cert).unwrap();
-                print_content(&pck_crl_filename, &pck_ca_crl).unwrap();
+                if print {
+                    let pck_filename = format!("{}.der", pck_type_str);
+                    let pck_crl_filename = format!("{}-crl.der", pck_type_str);
+                    print_content(&pck_filename, &pck_ca_cert).unwrap();
+                    print_content(&pck_crl_filename, &pck_ca_crl).unwrap();
+                }
             }
             let pck_ca_cert = parse_x509_der(&pck_ca_cert);
             if !pck_ca_cert.validity.is_valid() {
@@ -230,7 +237,7 @@ mod test {
 
         dotenvy::dotenv().ok();
 
-        let res = find_missing_collaterals_from_quote(&quote_hex).await;
+        let res = find_missing_collaterals_from_quote(&quote_hex, true).await;
 
         println!("{:?}", res);
     }
@@ -241,7 +248,7 @@ mod test {
 
         dotenvy::dotenv().ok();
 
-        let res = find_missing_collaterals_from_quote(&quote_hex).await;
+        let res = find_missing_collaterals_from_quote(&quote_hex, true).await;
 
         println!("{:?}", res);
     }
