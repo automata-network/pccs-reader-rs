@@ -3,7 +3,7 @@ pub mod parser;
 pub mod pccs;
 pub mod printer;
 pub mod types;
-pub mod pem;
+pub mod tcb_pem;
 
 use constants::*;
 use parser::get_pck_fmspc_and_issuer;
@@ -311,7 +311,7 @@ mod test {
 
         println!("{:?}", res);
 
-        let test_pem_chain = pem::generate_tcb_issuer_chain_pem(
+        let test_pem_chain = tcb_pem::generate_tcb_issuer_chain_pem(
             res.tcb_signing_ca.as_slice(),
             res.root_ca.as_slice()
         ).unwrap();
