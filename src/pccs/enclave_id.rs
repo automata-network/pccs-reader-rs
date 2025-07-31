@@ -29,7 +29,7 @@ pub enum EnclaveIdType {
     TDQE,
 }
 
-pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<Vec<u8>> {
+pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<String> {
     let rpc_url = env::var("RPC_URL").expect("RPC_URL env var not set").parse().expect("Invalid RPC URL format");
     let provider = ProviderBuilder::new().connect_http(rpc_url);
 
@@ -72,8 +72,7 @@ pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<Vec
         remove_prefix_if_found(signature.as_str())
     );
 
-    let ret = ret_str.into_bytes();
-    Ok(ret)
+    Ok(ret_str)
 }
 
 fn remove_prefix_if_found(h: &str) -> &str {
