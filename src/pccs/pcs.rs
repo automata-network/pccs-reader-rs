@@ -1,7 +1,5 @@
 use anyhow::Result;
-
 use std::env;
-
 use alloy::{primitives::Address, providers::ProviderBuilder, sol};
 
 sol! {
@@ -22,7 +20,7 @@ sol! {
 
 pub async fn get_certificate_by_id(ca_id: IPCSDao::CA) -> Result<(Vec<u8>, Vec<u8>)> {
     let rpc_url = env::var("RPC_URL").expect("RPC_URL env var not set").parse().expect("Invalid RPC URL format");
-    let provider = ProviderBuilder::new().on_http(rpc_url);
+    let provider = ProviderBuilder::new().connect_http(rpc_url);
 
     let mut pcs_dao_address = env::var("PCS_DAO")
         .expect("PCS_DAO env var not set");

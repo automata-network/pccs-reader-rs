@@ -24,7 +24,7 @@ sol! {
 
 pub async fn get_tcb_info(tcb_type: u8, fmspc: &str, version: u32) -> Result<Vec<u8>> {
     let rpc_url = env::var("RPC_URL").expect("RPC_URL env var not set").parse().expect("Invalid RPC URL format");
-    let provider = ProviderBuilder::new().on_http(rpc_url);
+    let provider = ProviderBuilder::new().connect_http(rpc_url);
 
     let mut fmspc_tcb_dao_address = env::var("FMSPC_TCB_DAO")
         .expect("FMSPC_TCB_DAO env var not set");
@@ -42,9 +42,9 @@ pub async fn get_tcb_info(tcb_type: u8, fmspc: &str, version: u32) -> Result<Vec
         U256::from(version),
     );
 
-    let call_return = call_builder.call().await?;
-    let tcb_info_str = call_return.tcbObj.tcbInfoStr;
-    let signature_bytes = call_return.tcbObj.signature;
+    let tcb_obj = call_builder.call().await?;
+    let tcb_info_str = tcb_obj.tcbInfoStr;
+    let signature_bytes = tcb_obj.signature;
 
     if tcb_info_str.len() == 0 || signature_bytes.len() == 0 {
         return Err(anyhow::Error::msg("missing"));

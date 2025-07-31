@@ -31,7 +31,7 @@ pub enum EnclaveIdType {
 
 pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<Vec<u8>> {
     let rpc_url = env::var("RPC_URL").expect("RPC_URL env var not set").parse().expect("Invalid RPC URL format");
-    let provider = ProviderBuilder::new().on_http(rpc_url);
+    let provider = ProviderBuilder::new().connect_http(rpc_url);
 
     let mut enclave_id_dao_address = env::var("ENCLAVE_ID_DAO")
         .expect("ENCLAVE_ID_DAO env var not set");
@@ -55,10 +55,10 @@ pub async fn get_enclave_identity(id: EnclaveIdType, version: u32) -> Result<Vec
     let call_builder =
         enclave_id_dao_contract.getEnclaveIdentity(enclave_id_type_uint256, U256::from(version));
 
-    let call_return = call_builder.call().await?;
+    let enclave_id_obj = call_builder.call().await?;
 
-    let identity_str = call_return.enclaveIdObj.identityStr;
-    let signature_bytes = call_return.enclaveIdObj.signature;
+    let identity_str = enclave_id_obj.identityStr;
+    let signature_bytes = enclave_id_obj.signature;
 
     if identity_str.len() == 0 || signature_bytes.len() == 0 {
         return Err(anyhow::Error::msg("missing"));
