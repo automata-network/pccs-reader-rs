@@ -3,6 +3,7 @@ pub mod parser;
 pub mod pccs;
 pub mod printer;
 pub mod types;
+pub mod pem;
 
 use constants::*;
 use parser::get_pck_fmspc_and_issuer;
@@ -298,7 +299,7 @@ pub fn parse_crl_der<'a>(raw_bytes: &'a [u8]) -> CertificateRevocationList<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::find_missing_collaterals_from_quote;
+    use super::*;
 
     #[tokio::test]
     async fn test_v3() {
@@ -306,9 +307,16 @@ mod test {
 
         dotenvy::dotenv().ok();
 
-        let res = find_missing_collaterals_from_quote(&quote_hex, true).await;
+        let res = find_missing_collaterals_from_quote(&quote_hex, true).await.unwrap();
 
         println!("{:?}", res);
+
+        let test_pem_chain = pem::generate_tcb_issuer_chain_pem(
+            res.tcb_signing_ca.as_slice(),
+            res.root_ca.as_slice()
+        ).unwrap();
+
+        println!("Test PEM Chain:\n{}", test_pem_chain);
     }
 
     #[tokio::test]
