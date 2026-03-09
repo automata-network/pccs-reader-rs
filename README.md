@@ -9,6 +9,10 @@
 # Automata On-chain PCCS Reader
 [![Automata On Chain PCCS Reader](https://img.shields.io/badge/Power%20By-Automata-orange.svg)](https://github.com/automata-network)
 
+> [!IMPORTANT]
+> This repo is now a public archive. All future development of this codebase has been migrated to the [Automata DCAP Attestation](https://github.com/automata-network/automata-dcap-attestation/tree/main/) monorepo.
+> Feel free to fork any reference implementations that it still contains.
+
 ## About
 
 A Reader to decode the basic collaterals from Automata On-chain PCCS, and check the missing collaterals for a given quote.
